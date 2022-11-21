@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Criptografia</title>
+  </head>
+  <body>
+    <div class="container">
+      <div id="divRadio">
+        <input type="radio" onClick="return tipoChave()" name="radio" id="radioChaves" value="chaves" checked="checked">
+        <label for="radioChaves">Gerar chaves</label>
+        <input type="radio" onClick="return tipoEncrypt()" name="radio" id="radioEncrypt" value="encrypt">
+        <label for="radioEncrypt">Criptografar</label>
+        <input type="radio" onClick="return tipoDecrypt()" name="radio" id="radioDecrypt" value="decrypt">
+        <label for="radioDecrypt">Descriptografar</label>
+      </div>
+
+      <div id="divChaves">
+        <label for="nome" style="margin: 20px 0 0 70px;">Nome:</label>
+        <input type="text" id="nome" required name="nome">
+        <br>
+        <button id="btnChaves" onclick="gerarChaves()" style="margin: 20px 0 0 90px;" type="button">Gerar par de chaves</button>
+        <br>
+        <span style="margin: 20px 0px 0 90px; color:rgb(4, 179, 4);" id="chavesGeradas"></span>
+        <br>
+        <button onclick="downloadChavePublica()" disabled style="margin: 20px 0px 0 90px;" id="btnChavePublica" type="button">Baixar chave pública</button>
+        <button onclick="downloadChavePrivada()" disabled id="btnChavePrivada" type="button">Baixar chave privada</button>
+        <a id="chavePrivada" hidden></a>
+        <a id="chavePublica" hidden></a>
+      </div>
+
+      <form action="api/controller.php" method="POST" id="divEncrypt" hidden enctype="multipart/form-data">
+        <label for="texto" style="margin: 20px 0 0 70px;">Texto claro:</label>
+        <input type="file" id="texto" required name="texto">
+        <br>
+        <label for="inputChavePublica" style="margin: 20px 0 0 70px;">Chave pública:</label>
+        <input type="file" id="inputChavePublica" required name="inputChavePublica">
+        <button id="btnCriptografar" style="margin: 20px 0 0 90px;" type="submit">Criptografar arquivo</button>
+        <br>
+        <span style="margin: 20px 0px 0 90px; color:rgb(4, 179, 4);" id="arquivoCriptografado"></span>
+        <br>
+        <button onclick="downloadTextoCifrado()" disabled style="margin: 20px 0px 0 90px;" id="btnTextoCifrado" type="button">Baixar texto cifrado</button>
+        <br>
+        <button onclick="downloadChaveSimetrica()" disabled style="margin: 20px 0px 0 90px;" id="btnChaveSimetrica" type="button">Baixar chave simétrica</button>
+        <button onclick="downloadVetorInicial()" disabled id="btnVetorInicial" type="button">Baixar vetor inicial</button>
+        <a id="textoCifrado" hidden></a>
+        <a id="chaveSimetrica" hidden></a>
+        <a id="vetorInicial" hidden></a>
+      </form>
+
+      <form action="api/controller.php" method="POST" id="divDecrypt" hidden enctype="multipart/form-data">
+        <label for="inputTextoCifrado" style="margin: 20px 0 0 70px;">Texto cifrado:</label>
+        <input type="file" id="inputTextoCifrado" required name="inputTextoCifrado">
+        <br>
+        <label for="key" style="margin: 20px 0 0 70px;">Key:</label>
+        <input type="file" id="key" required name="key">
+        <br>
+        <label for="iv" style="margin: 20px 0 0 70px;">Iv:</label>
+        <input type="file" id="iv" required name="iv">
+        <br>
+        <label for="inputChavePrivada" style="margin: 20px 0 0 70px;">Chave privada:</label>
+        <input type="file" id="inputChavePrivada" required name="inputChavePrivada">
+        <button id="btnDescriptografar" style="margin: 20px 0 0 90px;" type="submit">Descriptografar arquivo</button>
+        <br>
+        <span style="margin: 20px 0px 0 90px; color:rgb(4, 179, 4);" id="arquivoDescriptografado"></span>
+        <br>
+        <button onclick="downloadTextoClaro()" disabled style="margin: 20px 0px 0 90px;" id="btnTextoClaro" type="button">Baixar texto decifrado</button>
+        <a id="linkTextoClaro" hidden></a>
+      </form>
+
+      <br>
+    </div>
+  </body>
+</html>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script>
+  function tipoChave(){
+    $("#divChaves").prop("hidden",false);
+    $("#divEncrypt").prop("hidden",true);
+    $("#divDecrypt").prop("hidden",true);
+  }
+  function tipoEncrypt(){
+    $("#divChaves").prop("hidden",true);
+    $("#divEncrypt").prop("hidden",false);
+    $("#divDecrypt").prop("hidden",true);
+  }  
+  function tipoDecrypt(){
+    $("#divChaves").prop("hidden",true);
+    $("#divEncrypt").prop("hidden",true);
+    $("#divDecrypt").prop("hidden",false);
+  }  
+
+  function downloadChavePrivada() {
+    var element = document.getElementById('chavePrivada');
+    element.setAttribute('download', $('#nome').val() + ".pr.txt");
+    element.click();
+  }
+
+  function downloadChavePublica() {
+    var element = document.getElementById('chavePublica');
+    element.setAttribute('download', $('#nome').val() + ".pu.txt");
+    element.click();
+  }
+
+  function downloadTextoCifrado() {
+    var element = document.getElementById('textoCifrado');
+    element.setAttribute('download', "y.cbc.txt");
+    element.click();
+  }
+
+  function downloadChaveSimetrica() {
+    var element = document.getElementById('chaveSimetrica');
+    element.setAttribute('download', "K.txt");
+    element.click();
+  }
+
+  function downloadVetorInicial() {
+    var element = document.getElementById('vetorInicial');
+    element.setAttribute('download', "iv.txt");
+    element.click();
+  }
+
+  function downloadTextoClaro() {
+    var element = document.getElementById('linkTextoClaro');
+    element.setAttribute('download', "x.txt");
+    element.click();
+  }
+
+  
+  function gerarChaves(){
+    $.ajax({
+      method: "POST",
+      url: "api/controller.php",
+      data: {chaves: 'gerarChaves', nome: $('#nome').val()},
+      dataType: "json",
+      success: function (chaves){
+        $("#chavesGeradas").html("Chaves geradas com sucesso!");
+        $("#btnChavePrivada").prop('disabled', false);
+        $("#btnChavePublica").prop('disabled', false);
+        $("#nome").prop('readonly', true);
+        document.getElementById('chavePrivada').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves[0]));
+        document.getElementById('chavePublica').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves[1]));
+      }
+    });
+    $("#btnChaves").prop("disabled",true);
+  }
+
+  $('#divEncrypt').on('submit', function(e){
+    e.preventDefault();
+    var formdata = new FormData(this);
+    $.ajax({
+      method: "POST",
+      url: "api/controller.php",
+      data: formdata,
+      dataType: "json",
+      processData: false,
+      contentType: false,
+      success: function (chaves){
+        $("#arquivoCriptografado").html("Texto criptografado com sucesso!");
+        $("#btnTextoCifrado").prop('disabled', false);
+        $("#btnChaveSimetrica").prop('disabled', false);
+        $("#btnVetorInicial").prop('disabled', false);
+        $("#texto").prop('disabled', true);
+        $("#inputChavePublica").prop('disabled', true);
+        document.getElementById('textoCifrado').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves[0]));
+        document.getElementById('chaveSimetrica').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves[1]));
+        document.getElementById('vetorInicial').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves[2]));
+      }
+    });
+    $("#btnCriptografar").prop("disabled",true);
+  });
+
+  $('#divDecrypt').on('submit', function(e){
+    e.preventDefault();
+    var formdata = new FormData(this);
+    $.ajax({
+      method: "POST",
+      url: "api/controller.php",
+      data: formdata,
+      dataType: "json",
+      processData: false,
+      contentType: false,
+      success: function (chaves){
+        $("#arquivoDescriptografado").html("Texto descriptografado com sucesso!");
+        $("#iv").prop('disabled', true);
+        $("#key").prop('disabled', true);
+        $("#inputChavePrivada").prop('disabled', true);
+        $("#inputTextoCifrado").prop('disabled', true);
+        $("#btnTextoClaro").prop('disabled', false);
+        document.getElementById('linkTextoClaro').setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chaves));
+      }
+    });
+    $("#btnDescriptografar").prop("disabled",true);
+  });
+</script>
